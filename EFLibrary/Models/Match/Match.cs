@@ -1,7 +1,9 @@
-﻿using System;
+﻿using EFLibrary.DataAcces;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text;
 
 namespace EFLibrary.Models
@@ -13,9 +15,11 @@ namespace EFLibrary.Models
         public string Role { get; set; }
         public int Season { get; set; }
         public string PlatformId { get; set; }
+        private Champion _Champion;
         [ForeignKey("ChampionId")]
-        public Champion Champion { get; set; }
+        public Champion Champion { get { return new DbCon().Champion.Where(x => x.Id == ChampionId).FirstOrDefault(); } }
         public int ChampionId { get; set; }
+       
         public int Queue { get; set; }
         public string Lane { get; set; }
         public long TimeStamp { get; set; }

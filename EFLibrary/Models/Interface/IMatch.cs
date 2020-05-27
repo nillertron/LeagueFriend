@@ -4,7 +4,7 @@ namespace EFLibrary.Models
 {
     public interface IMatch
     {
-        Champion Champion { get; set; }
+        Champion Champion { get; }
         long GameId { get; set; }
         string Lane { get; set; }
         List<Participant> Participants { get; set; }
