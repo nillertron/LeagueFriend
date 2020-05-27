@@ -14,7 +14,7 @@ namespace Api.Processor
 {
     public class LolProcessor : ILolProcessor
     {
-        string Key = "RGAPI-da4b4c18-ed1d-4297-9dd1-88446f4f61c8";
+        string Key = "";
         private DbCon db;
         public LolProcessor(IDbCon db)
         {
