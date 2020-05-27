@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29905.134
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeagueFriend", "LeagueFriend\LeagueFriend.csproj", "{096EAD2E-5E65-4E23-86F0-40FAF455E099}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EFLibrary", "EFLibrary\EFLibrary.csproj", "{55A67615-343F-4166-B702-A867496D80BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "Api\Api.csproj", "{99503AB1-57D4-4F7C-A302-906090622AA1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{096EAD2E-5E65-4E23-86F0-40FAF455E099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{096EAD2E-5E65-4E23-86F0-40FAF455E099}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{096EAD2E-5E65-4E23-86F0-40FAF455E099}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{096EAD2E-5E65-4E23-86F0-40FAF455E099}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55A67615-343F-4166-B702-A867496D80BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55A67615-343F-4166-B702-A867496D80BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55A67615-343F-4166-B702-A867496D80BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55A67615-343F-4166-B702-A867496D80BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99503AB1-57D4-4F7C-A302-906090622AA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99503AB1-57D4-4F7C-A302-906090622AA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99503AB1-57D4-4F7C-A302-906090622AA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99503AB1-57D4-4F7C-A302-906090622AA1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {41D22F76-152F-40B7-B19C-E30AFA84846F}
+	EndGlobalSection
+EndGlobal

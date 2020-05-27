@@ -1,0 +1,40 @@
+﻿<Window x:Class="LeagueFriend.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LeagueFriend"
+        xmlns:view="clr-namespace:LeagueFriend.Mvvm_View"
+        xmlns:viewModel="clr-namespace:LeagueFriend.Mvvm_ViewModel"        
+        mc:Ignorable="d"
+        Title="League Friend" Height="450" Width="800">
+    <Window.Resources>
+
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="121*"/>
+            <ColumnDefinition Width="199*"/>
+            <ColumnDefinition Width="160*"/>
+            <ColumnDefinition Width="160*"/>
+            <ColumnDefinition Width="160*"/>
+        </Grid.ColumnDefinitions>
+        <Image Source="/Ressources/download.jpg" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left"  ></Image>
+        <Border Background="AliceBlue" Margin="60, 0, 0, 0" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="5" ></Border>
+        <Border Background="AliceBlue" Grid.Row="1" Grid.Column="0" Grid.RowSpan="6" ></Border>
+        <ContentControl Grid.Row="1" Grid.RowSpan="6" Grid.Column="1" Grid.ColumnSpan="4" Content="{Binding CurrentPage}"></ContentControl>
+        <Button Content="Player" Command="{Binding PlayerPageCommand}" Grid.Row="1" Background="AliceBlue"></Button>
+        <Button Content="Champion" Command="{Binding ChampionPageCommand}" Grid.Row="2" Background="AliceBlue"></Button>
+
+
+    </Grid>
+</Window>
