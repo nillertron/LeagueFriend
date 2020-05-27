@@ -9,21 +9,22 @@ using EFLibrary.Models;
 using EFLibrary.DataAcces;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Autofac;
 
 namespace Api.Processor
 {
     public class LolProcessor : ILolProcessor
     {
         string Key = "";
-        private DbCon db;
-        public LolProcessor(IDbCon db)
+        private IComponentContext Context;
+        public LolProcessor(IComponentContext context)
         {
-            this.db = (DbCon)db;
+            Context = context;
         }
 
         public async Task<Player> FindAccountDetails(string accName)
         {
-            
+
             var client = new RestClient("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + accName.Trim());
             var request = new RestRequest(Method.GET);
             request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -33,8 +34,8 @@ namespace Api.Processor
         }
         public async Task<Player> FindAccountDetailsById(string AccountId)
         {
-            var player = new Player();
-            using (var dbCon = new DbCon())
+            var player = (Player)Context.Resolve<IPlayer>();
+            using (var dbCon = (DbCon)Context.Resolve<IDbCon>())
             {
 
                 player = dbCon.Player.Where(x => x.AccountId == AccountId).FirstOrDefault();
@@ -88,7 +89,7 @@ namespace Api.Processor
         }
         public async Task FindChampionFromId(Participant p, int id)
         {
-            using (var dbCon = new DbCon())
+            using (var dbCon = (DbCon)Context.Resolve<IDbCon>())
             {
                 p.Champion = dbCon.Champion.AsNoTracking().Where(x => x.Id == id).FirstOrDefault();
             }
@@ -96,7 +97,7 @@ namespace Api.Processor
         }
         public async Task FillMatchDetails(Match game)
         {
-            using(var db = new DbCon())
+            using (var db = (DbCon)Context.Resolve<IDbCon>())
             {
                 var storedGame = db.Match.Where(x => x.GameId == game.GameId).FirstOrDefault();
                 if (storedGame == null)
@@ -112,15 +113,13 @@ namespace Api.Processor
                     db.AddRange(Teams);
                     Match.participantIdentities.ForEach(async o =>
                     {
-                        using (var dbCon = new DbCon())
+                        //Gemmer dette i den lokale database, sådan at det ikke er nødvendigt at belaste API'en mere end nødvendigt
+                        using (var dbCon = (DbCon)Context.Resolve<IDbCon>())
                         {
                             if (o.player.Id != null)
-                            { 
+                            {
                                 var player = await FindAccountDetailsById(o.player.AccountId);
-
-                            
                                 var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
-
                                 var pt = new Participant { PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), Match = game };
                                 game.Participants.Add(pt);
                             }
@@ -129,8 +128,8 @@ namespace Api.Processor
 
                     });
 
-                        db.Add(game);
-                        await db.SaveChangesAsync();
+                    db.Add(game);
+                    await db.SaveChangesAsync();
 
                 }
                 else
@@ -139,7 +138,7 @@ namespace Api.Processor
                 }
 
             }
-            
+
 
         }
     }

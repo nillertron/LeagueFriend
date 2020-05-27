@@ -34,7 +34,7 @@ namespace LeagueFriend.DependencyInjection
                 //    .As(x => x.GetInterfaces().FirstOrDefault(s => s.Name == "I" + x.Name));
                 builder.RegisterAssemblyTypes(Assembly.Load(nameof(LeagueFriend)))
                  .Where(o => o.Namespace.Contains("Mvvm_ViewModel"))
-                 .AsSelf();
+                 .AsImplementedInterfaces();
                 builder.RegisterAssemblyTypes(Assembly.Load(nameof(LeagueFriend)))
                    .Where(o => o.Namespace.Contains("Mvvm_View")).AsSelf();
 

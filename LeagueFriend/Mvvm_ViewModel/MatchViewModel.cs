@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LeagueFriend.Mvvm_ViewModel
 {
-    class MatchViewModel:BaseViewModel
+    class MatchViewModel : BaseViewModel, IMatchViewModel
     {
         private ObservableCollection<Match> _MatchList;
         public ObservableCollection<Match> MatchList { get => _MatchList; set { _MatchList = value; Notify("MatchList"); } }
