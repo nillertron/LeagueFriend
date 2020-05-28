@@ -7,7 +7,7 @@ namespace Api.Processor
 {
     public interface ILolProcessor
     {
-        Task FillMatchDetails(Match game);
+        Task<Match> FillMatchDetails(Match game);
         Task<Player> FindAccountDetails(string accName);
         Task<Player> FindAccountDetailsById(string AccountId);
         Task<List<ChampionResponse>> GetAllChampions();

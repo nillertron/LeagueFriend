@@ -40,16 +40,19 @@ namespace LeagueFriend.Mvvm_View
 
         private async void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            var obj = sender as ListViewItem;
-            var player = obj.Content as Player;
-            var matchList = new List<Match>();
+            try
+            {
+                var obj = sender as ListViewItem;
+                var player = obj.Content as Player;
+                var matchList = new List<Match>();
 
                 matchList = await ViewModel.GetMatchList(player);
                 new MatchView(matchList, player).Show();
-
-
-
-
+            }
+            catch (Exception ee)
+            {
+                MessageBox.Show(ee.Message);
+            }
         }
     }
 }

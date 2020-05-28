@@ -27,14 +27,14 @@ namespace LeagueFriend.Mvvm_ViewModel
         {
             Context = context;
 
-                Task.Run(() =>
+            Task.Run(() =>
+            {
+                using (var db = (DbCon)Context.Resolve<IDbCon>())
                 {
-                    using (var db = (DbCon)Context.Resolve<IDbCon>())
-                    {
-                        PlayerListe = new ObservableCollection<Player>(db.Player.Where(x => x.SaveSearch == true).ToList());
-                    }
-                });
-            
+                    PlayerListe = new ObservableCollection<Player>(db.Player.Where(x => x.SaveSearch == true).ToList());
+                }
+            });
+
 
         }
         private async Task SearchCommandMethod()
@@ -52,7 +52,7 @@ namespace LeagueFriend.Mvvm_ViewModel
                     try
                     {
                         await db.SaveChangesAsync();
-                        
+
                         PlayerListe.Add(dbPlayer);
                     }
                     catch (Exception ee)
@@ -68,7 +68,7 @@ namespace LeagueFriend.Mvvm_ViewModel
                     await db.SaveChangesAsync();
                 }
             }
-           
+
 
         }
         public async Task<List<Match>> GetMatchList(Player p)
@@ -80,21 +80,43 @@ namespace LeagueFriend.Mvvm_ViewModel
                 await Task.Run(async () =>
                 {
                     var db = (DbCon)Context.Resolve<IDbCon>();
-                    
-                        var matchList = await proc.GetMatchList(p);
-                        matchList.ForEach(o => list.Add(new Match { ChampionId = o.Champion, GameId = o.GameId, Lane = o.Lane, PlatformId = o.PlatformId, Queue = o.Queue, Role = o.Role, Season = o.Season, TimeStamp = o.TimeStamp }));
-                        for (int i = 0; i < list.Count; i++)
-                        {
-                            await proc.FillMatchDetails(list[i]);
-                            await Task.Delay(50);
-                        }
-                    
+
+                    var matchList = await proc.GetMatchList(p);
+                    matchList.ForEach(o => list.Add(new Match { ChampionId = o.Champion, GameId = o.GameId, Lane = o.Lane, PlatformId = o.PlatformId, Queue = o.Queue, Role = o.Role, Season = o.Season, TimeStamp = o.TimeStamp }));
+                    for (int i = 0; i < 8; i++)
+                    {
+                        list[i] = await proc.FillMatchDetails(list[i]);
+                        await Task.Delay(50);
+                    }
+
 
                 });
             }
             else
-                return null;
+                throw new Exception("Player not found");
 
+            Task.Run(async () =>
+            {
+                //Vent 2 minutter for ikke at overflow api'en
+                await Task.Delay(TimeSpan.FromMinutes(2));
+                Match dbMatch = null;
+                for (int x = 0; x < list.Count; x++)
+                {
+                    using (var db = (DbCon)Context.Resolve<IDbCon>())
+                    {
+                        dbMatch = db.Match.Where(o => o.GameId == list[x].GameId).FirstOrDefault();
+                    }
+                    if (dbMatch == null)
+                        continue;
+                    for (int i = 0; i < 8; i++)
+                    {
+                        list[x] = await proc.FillMatchDetails(list[i]);
+                        await Task.Delay(50);
+                    }
+                    dbMatch = null;
+                }
+
+            });
             return list;
         }
     }

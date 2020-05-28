@@ -102,7 +102,7 @@ namespace Api.Processor
             }
 
         }
-        public async Task FillMatchDetails(Match game)
+        public async Task<Match> FillMatchDetails(Match game)
         {
             var db = (DbCon)Context.Resolve<IDbCon>();
 
@@ -111,7 +111,6 @@ namespace Api.Processor
             {
                 try
                 {
-                    await db.Database.BeginTransactionAsync();
                     var client = new RestClient("https://euw1.api.riotgames.com/lol/match/v4/matches/" + game.GameId);
                     var request = new RestRequest(Method.GET);
                     request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -121,43 +120,38 @@ namespace Api.Processor
                     var Teams = new List<Team>();
                     Match.Teams.ForEach(x => Teams.Add(new Team { TeamId = x.TeamId, Win = x.Win }));
                     db.AddRange(Teams);
-                    var participantList = new List<IParticipant>();
-                    Match.participantIdentities.ForEach(async o =>
+                    var participantList = new List<Participant>();
+                    await Task.Run(async () =>
                     {
-                        //Gemmer dette i den lokale database, sådan at det ikke er nødvendigt at belaste API'en mere end nødvendigt
-
-                        if (o.player.AccountId != null)
+                        foreach(var o in Match.participantIdentities)
                         {
-                            await Task.Delay(50);
-                            Player player = null;
-                            try
+                            if (o.player.AccountId != null)
                             {
-                                 player = await FindAccountDetailsById(o.player.AccountId);
+                                await Task.Delay(50);
+                                Player player = null;
 
+                                player = await FindAccountDetailsById(o.player.AccountId);
+                                if (player != null)
+                                {
+                                    var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
+                                    var pt = new Participant { PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), MatchGameId = game.GameId };
+                                    participantList.Add(pt);
+                                }
                             }
-                            catch(Exception ee)
-                            {
-
-                            }
-                            if (player != null)
-                            {
-                                var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
-                                var pt = new Participant { PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), Match = game };
-                                game.Participants.Add(pt);
-                                participantList.Add(pt);
-                            }
-
                         }
+
+
                     });
                     Teams.ForEach(o => o.Game = game);
-                    db.AddRange(participantList);
+                    //db.Participant.AddRange(participantList);
+                    //await db.SaveChangesAsync();
+                    game.Participants = participantList;
                     db.Add(game);
                     await db.SaveChangesAsync();
                 }
                 catch (Exception ee)
                 {
-                    db.Database.RollbackTransaction();
-                    throw new Exception("Fail, transation rollback");
+                    var msg = ee;
                 }
 
 
@@ -165,12 +159,15 @@ namespace Api.Processor
             else
             {
                 game = storedGame;
-                game.Participants = db.Participant.Where(x => x.Match.GameId == game.GameId).ToList();
+                game.Participants = db.Participant.Where(x => x.MatchGameId == game.GameId).ToList();
+                game.Teams = db.Team.Where(o => o.Game == game).ToList();
+                foreach(var x in game.Participants)
+                {
+                    x.Team = game.Teams.Where(o => o == x.Team).FirstOrDefault();
+
+                }
             }
-
-
-
-
+            return game;
         }
     }
 }

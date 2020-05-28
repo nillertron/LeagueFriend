@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace LeagueFriend.Mvvm_ViewModel
         {
             MatchList = new ObservableCollection<Match>(matchList);
             _Player = p;
-
+            matchList = MatchList.Where(o => o.Participants.Count > 0).ToList();
             InitCalc(matchList);
 
 
@@ -32,25 +33,20 @@ namespace LeagueFriend.Mvvm_ViewModel
 
         private async Task InitCalc(List<Match> matchList)
         {
-            try
-            {
-                matchList.ForEach(o =>
-            {
-                o.Participants.ForEach(x =>
-                {
-                    if (x.PlayerId == _Player.Id)
-                    {
-                        if (x.Team.Win == "Win")
-                            WinCount++;
-                        else LossCount++;
-                    }
-                });
-            });
-            }
-            catch (Exception ee)
-            {
 
-            }
+            matchList.ForEach(o =>
+        {
+            o.Participants.ForEach(x =>
+            {
+                if (x.PlayerId == _Player.Id)
+                {
+                    if (x.Team.Win == "Win")
+                        WinCount++;
+                    else LossCount++;
+                }
+            });
+        });
+
         }
     }
 }
