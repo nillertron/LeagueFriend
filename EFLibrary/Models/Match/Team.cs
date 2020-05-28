@@ -11,5 +11,6 @@ namespace EFLibrary.Models
         public int Id { get; set; }
         public int TeamId { get; set; }
         public string Win { get; set; }
+        public Match Game { get; set; }
     }
 }

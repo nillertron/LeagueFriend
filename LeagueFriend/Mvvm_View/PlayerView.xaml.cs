@@ -43,16 +43,11 @@ namespace LeagueFriend.Mvvm_View
             var obj = sender as ListViewItem;
             var player = obj.Content as Player;
             var matchList = new List<Match>();
-            try
-            {
-                matchList = await ViewModel.GetMatchList(player);
 
-            }
-            catch(Exception ee)
-            {
-                MessageBox.Show(ee.Message);
-            }
-            new MatchView(matchList).Show();
+                matchList = await ViewModel.GetMatchList(player);
+                new MatchView(matchList, player).Show();
+
+
 
 
         }

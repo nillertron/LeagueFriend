@@ -56,7 +56,8 @@ namespace Api.Processor
                     await dbCon.SaveChangesAsync();
                 }
             }
-
+            if (player == null)
+                return null;
 
             return player;
         }
@@ -84,8 +85,14 @@ namespace Api.Processor
             request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
             request.AddHeader("X-Riot-Token", Key);
             var response = await client.ExecuteAsync(request);
-            var matchList = JsonConvert.DeserializeObject<Response>(response.Content);
-            return matchList.Matches;
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var matchList = JsonConvert.DeserializeObject<Response>(response.Content);
+                return matchList.Matches;
+
+            }
+            else
+                throw new Exception("Api limit exceeded");
         }
         public async Task FindChampionFromId(Participant p, int id)
         {
@@ -97,11 +104,14 @@ namespace Api.Processor
         }
         public async Task FillMatchDetails(Match game)
         {
-            using (var db = (DbCon)Context.Resolve<IDbCon>())
+            var db = (DbCon)Context.Resolve<IDbCon>();
+
+            var storedGame = db.Match.Where(x => x.GameId == game.GameId).FirstOrDefault();
+            if (storedGame == null)
             {
-                var storedGame = db.Match.Where(x => x.GameId == game.GameId).FirstOrDefault();
-                if (storedGame == null)
+                try
                 {
+                    await db.Database.BeginTransactionAsync();
                     var client = new RestClient("https://euw1.api.riotgames.com/lol/match/v4/matches/" + game.GameId);
                     var request = new RestRequest(Method.GET);
                     request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -111,33 +121,54 @@ namespace Api.Processor
                     var Teams = new List<Team>();
                     Match.Teams.ForEach(x => Teams.Add(new Team { TeamId = x.TeamId, Win = x.Win }));
                     db.AddRange(Teams);
+                    var participantList = new List<IParticipant>();
                     Match.participantIdentities.ForEach(async o =>
                     {
                         //Gemmer dette i den lokale database, sådan at det ikke er nødvendigt at belaste API'en mere end nødvendigt
-                        using (var dbCon = (DbCon)Context.Resolve<IDbCon>())
+
+                        if (o.player.AccountId != null)
                         {
-                            if (o.player.Id != null)
+                            await Task.Delay(50);
+                            Player player = null;
+                            try
                             {
-                                var player = await FindAccountDetailsById(o.player.AccountId);
+                                 player = await FindAccountDetailsById(o.player.AccountId);
+
+                            }
+                            catch(Exception ee)
+                            {
+
+                            }
+                            if (player != null)
+                            {
                                 var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
                                 var pt = new Participant { PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), Match = game };
                                 game.Participants.Add(pt);
+                                participantList.Add(pt);
                             }
 
                         }
-
                     });
-
+                    Teams.ForEach(o => o.Game = game);
+                    db.AddRange(participantList);
                     db.Add(game);
                     await db.SaveChangesAsync();
-
                 }
-                else
+                catch (Exception ee)
                 {
-                    game = storedGame;
+                    db.Database.RollbackTransaction();
+                    throw new Exception("Fail, transation rollback");
                 }
+
 
             }
+            else
+            {
+                game = storedGame;
+                game.Participants = db.Participant.Where(x => x.Match.GameId == game.GameId).ToList();
+            }
+
+
 
 
         }

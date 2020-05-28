@@ -4,14 +4,16 @@ using EFLibrary.DataAcces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EFLibrary.Migrations
 {
     [DbContext(typeof(DbCon))]
-    partial class DbContextModelSnapshot : ModelSnapshot
+    [Migration("20200527153733_saveSearch")]
+    partial class saveSearch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -139,7 +141,7 @@ namespace EFLibrary.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<long?>("GameId")
+                    b.Property<long?>("MatchGameId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("TeamId")
@@ -150,7 +152,7 @@ namespace EFLibrary.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GameId");
+                    b.HasIndex("MatchGameId");
 
                     b.ToTable("Team");
                 });
@@ -184,9 +186,9 @@ namespace EFLibrary.Migrations
 
             modelBuilder.Entity("EFLibrary.Models.Team", b =>
                 {
-                    b.HasOne("EFLibrary.Models.Match", "Game")
+                    b.HasOne("EFLibrary.Models.Match", null)
                         .WithMany("Teams")
-                        .HasForeignKey("GameId");
+                        .HasForeignKey("MatchGameId");
                 });
 #pragma warning restore 612, 618
         }

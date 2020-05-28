@@ -14,6 +14,7 @@ namespace EFLibrary.Models
         public string Name { get; set; }
         public int ProfileIconId { get; set; }
         public int SummonerLevel { get; set; }
+        public bool SaveSearch { get; set; }
 
     }
 }

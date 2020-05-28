@@ -20,10 +20,10 @@ namespace LeagueFriend.Mvvm_View
     public partial class MatchView : Window
     {
         private MatchViewModel ViewModel;
-        public MatchView(List<Match> Liste)
+        public MatchView(List<Match> Liste, Player p)
         {
             InitializeComponent();
-            DataContext = ViewModel = new MatchViewModel(Liste);
+            DataContext = ViewModel = new MatchViewModel(Liste, p);
         }
     }
 }

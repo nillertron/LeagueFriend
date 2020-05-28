@@ -16,7 +16,6 @@ namespace LeagueFriend.Mvvm_ViewModel
 {
     public class PlayerViewModel : BaseViewModel, IPlayerViewModel
     {
-        private DbCon db;
         private IComponentContext Context;
         private ObservableCollection<Player> _PlayerListe = new ObservableCollection<Player>();
         public ObservableCollection<Player> PlayerListe { get => _PlayerListe; set { _PlayerListe = value; Notify("PlayerListe"); } }
@@ -24,25 +23,52 @@ namespace LeagueFriend.Mvvm_ViewModel
         public string SearchTb { get => _SearchTb; set { _SearchTb = value; Notify("SearchTb"); } }
         public ICommand SearchCommand { get { return _ClickCommand = new CommandHandler(async () => SearchCommandMethod(), () => true); } }
         //public ICommand PlayerDetailsCommand { get { return _ClickCommand = new CommandHandler(async () => PlayerDetails(), () => true); } }
-        public PlayerViewModel(IDbCon dbCon, IComponentContext context)
+        public PlayerViewModel(IComponentContext context)
         {
-            db = (DbCon)dbCon;
             Context = context;
-            Task.Run(() =>
-            {
-                PlayerListe = new ObservableCollection<Player>(db.Player.OrderBy(x => x.Id).ToList());
-            });
+
+                Task.Run(() =>
+                {
+                    using (var db = (DbCon)Context.Resolve<IDbCon>())
+                    {
+                        PlayerListe = new ObservableCollection<Player>(db.Player.Where(x => x.SaveSearch == true).ToList());
+                    }
+                });
+            
+
         }
         private async Task SearchCommandMethod()
         {
             var lolProcessor = Context.Resolve<ILolProcessor>();
             var player = await lolProcessor.FindAccountDetails(SearchTb);
-            if (player != null)
+            player.SaveSearch = true;
+            using (var db = (DbCon)Context.Resolve<IDbCon>())
             {
-                PlayerListe.Add(player);
-                db.Player.Add(player);
-                await db.SaveChangesAsync();
+                var dbPlayer = await db.FindAsync<Player>(player.Id);
+                if (dbPlayer != null)
+                {
+                    dbPlayer.SaveSearch = true;
+                    dbPlayer.SummonerLevel = player.SummonerLevel;
+                    try
+                    {
+                        await db.SaveChangesAsync();
+                        
+                        PlayerListe.Add(dbPlayer);
+                    }
+                    catch (Exception ee)
+                    {
+                        var msg = ee.Message;
+                    }
+
+                }
+                else if (player != null)
+                {
+                    PlayerListe.Add(player);
+                    db.Player.Add(player);
+                    await db.SaveChangesAsync();
+                }
             }
+           
 
         }
         public async Task<List<Match>> GetMatchList(Player p)
@@ -53,8 +79,8 @@ namespace LeagueFriend.Mvvm_ViewModel
             {
                 await Task.Run(async () =>
                 {
-                    using (db = new DbCon())
-                    {
+                    var db = (DbCon)Context.Resolve<IDbCon>();
+                    
                         var matchList = await proc.GetMatchList(p);
                         matchList.ForEach(o => list.Add(new Match { ChampionId = o.Champion, GameId = o.GameId, Lane = o.Lane, PlatformId = o.PlatformId, Queue = o.Queue, Role = o.Role, Season = o.Season, TimeStamp = o.TimeStamp }));
                         for (int i = 0; i < list.Count; i++)
@@ -62,7 +88,7 @@ namespace LeagueFriend.Mvvm_ViewModel
                             await proc.FillMatchDetails(list[i]);
                             await Task.Delay(50);
                         }
-                    }
+                    
 
                 });
             }
@@ -71,6 +97,5 @@ namespace LeagueFriend.Mvvm_ViewModel
 
             return list;
         }
-
     }
 }
