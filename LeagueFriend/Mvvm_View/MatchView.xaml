@@ -33,7 +33,7 @@
         <TextBlock Grid.Column="1" Text="{Binding WinCount}"></TextBlock>
         <TextBlock Grid.Row="1" Text="Loses:"></TextBlock>
         <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding LossCount}"></TextBlock>
-        <TextBlock Grid.Row="2" Text="%:"></TextBlock>
+        <TextBlock Grid.Row="2" Text="Win %:"></TextBlock>
         <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding PercentCount}"></TextBlock>
         
         <!--Listview-->
@@ -41,6 +41,7 @@
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Champion" DisplayMemberBinding="{Binding Champion.Name}"></GridViewColumn>
+                    <GridViewColumn Header="Win/Lose" DisplayMemberBinding="{Binding WinString}"></GridViewColumn>
                 </GridView>
             </ListView.View>
         </ListView>

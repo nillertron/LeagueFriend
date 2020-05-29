@@ -10,7 +10,7 @@ namespace LeagueFriend.Mvvm_ViewModel
 {
     class MatchViewModel : BaseViewModel, IMatchViewModel
     {
-        private ObservableCollection<Match> _MatchList;
+        private ObservableCollection<Match> _MatchList = new ObservableCollection<Match>();
         public ObservableCollection<Match> MatchList { get => _MatchList; set { _MatchList = value; Notify("MatchList"); } }
 
         private int _WinCount;
@@ -20,11 +20,13 @@ namespace LeagueFriend.Mvvm_ViewModel
         private double _PercentCount;
         public double PercentCount { get => _PercentCount; set { _PercentCount = value; Notify("PercentCount"); } }
         private Player _Player;
+ 
         public MatchViewModel(List<Match> matchList, Player p)
         {
+            matchList = matchList.Where(o => o.Participants.Count > 0).ToList();
             MatchList = new ObservableCollection<Match>(matchList);
+
             _Player = p;
-            matchList = MatchList.Where(o => o.Participants.Count > 0).ToList();
             InitCalc(matchList);
 
 
@@ -34,6 +36,7 @@ namespace LeagueFriend.Mvvm_ViewModel
         private async Task InitCalc(List<Match> matchList)
         {
 
+
             matchList.ForEach(o =>
         {
             o.Participants.ForEach(x =>
@@ -41,11 +44,21 @@ namespace LeagueFriend.Mvvm_ViewModel
                 if (x.PlayerId == _Player.Id)
                 {
                     if (x.Team.Win == "Win")
+                    {
                         WinCount++;
-                    else LossCount++;
+                        o.Win = true;
+                    }
+                    else
+                    {
+                        LossCount++;
+                        o.Win = false;
+                    }
+
                 }
             });
         });
+            var totalGames = WinCount + LossCount;
+            PercentCount = ((double)WinCount / (double)totalGames) * (double)100;
 
         }
     }

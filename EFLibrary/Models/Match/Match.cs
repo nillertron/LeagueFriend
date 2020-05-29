@@ -13,6 +13,10 @@ namespace EFLibrary.Models
         [Key]
         public long GameId { get; set; }
         public string Role { get; set; }
+        [NotMapped]
+        public bool Win { get; set; }
+        [NotMapped]
+        public string WinString { get { if (Win) return "Win"; else return "Lose"; } }
         public int Season { get; set; }
         public string PlatformId { get; set; }
         private Champion _Champion;
