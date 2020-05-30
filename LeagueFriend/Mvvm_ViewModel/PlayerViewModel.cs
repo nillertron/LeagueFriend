@@ -23,12 +23,13 @@ namespace LeagueFriend.Mvvm_ViewModel
         private string _SearchTb;
         public string SearchTb { get => _SearchTb; set { _SearchTb = value; Notify("SearchTb"); } }
         public ICommand SearchCommand { get { return _ClickCommand = new CommandHandler(async () => SearchCommandMethod(), () => true); } }
-        private static CancellationTokenSource StoredToken;
+        private static List<CancellationTokenSource> TokenList = new List<CancellationTokenSource>();
+
+        //Statisk da det er muligt at åbne en ny instans af denne side imens den gamle tråd køre
 
         public PlayerViewModel(IComponentContext context)
         {
             Context = context;
-
             Task.Run(() =>
             {
                 using (var db = (DbCon)Context.Resolve<IDbCon>())
@@ -75,9 +76,13 @@ namespace LeagueFriend.Mvvm_ViewModel
         }
         public async Task<List<Match>> GetMatchList(Player p)
         {
-            if(StoredToken != null)
+            if(TokenList.Count>0)
             {
-                StoredToken.Cancel();
+                for(int i = 0; i<TokenList.Count; i++)
+                {
+                    TokenList[i].Cancel();
+                    TokenList.RemoveAt(i);
+                }
             }
             var proc = Context.Resolve<ILolProcessor>();
             var list = new List<Match>();
@@ -89,16 +94,10 @@ namespace LeagueFriend.Mvvm_ViewModel
 
                     var matchList = await proc.GetMatchList(p);
                     matchList.ForEach(o => list.Add(new Match { ChampionId = o.Champion, GameId = o.GameId, Lane = o.Lane, PlatformId = o.PlatformId, Queue = o.Queue, Role = o.Role, Season = o.Season, TimeStamp = o.TimeStamp }));
-                    var dbList = db.Match.ToList();
+                    var dbList = db.Match.Where(o=> o.Participants.Any(x=>x.PlayerId==p.Id)).Include(o=> o.Participants).Include("Participants.Stats").Include(x=>x.Teams).Include("Participants.TimeLine").ToList();
                     foreach (var game in dbList)
                     {
-                        game.Participants = db.Participant.Where(x => x.MatchGameId == game.GameId).ToList();
-                        game.Teams = db.Team.Where(o => o.Game == game).ToList();
-                        foreach (var x in game.Participants)
-                        {
-                            x.Team = game.Teams.Where(o => o == x.Team).FirstOrDefault();
 
-                        }
                         var listPosition = list.Where(o => o.GameId == game.GameId).FirstOrDefault();
                         if (listPosition != null)
                         {
@@ -138,8 +137,9 @@ namespace LeagueFriend.Mvvm_ViewModel
             }
             else
                 throw new Exception("Player not found");
-            StoredToken = new CancellationTokenSource();
-            FillRemainingMatchesFromAPI(list, StoredToken.Token);
+            var storedToken = new CancellationTokenSource();
+            TokenList.Add(storedToken);
+            FillRemainingMatchesFromAPI(list, storedToken.Token);
 
             return list;
         }
@@ -157,7 +157,14 @@ namespace LeagueFriend.Mvvm_ViewModel
                 {
                     if (wait)
                     {
-                        await Task.Delay(TimeSpan.FromMinutes(2));
+                        for(int i = 0; i< 120; i++)
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(10));
+                            if (cts.IsCancellationRequested)
+                            {
+                                cts.ThrowIfCancellationRequested();
+                            }
+                        }
                     }
                     using (var db = (DbCon)Context.Resolve<IDbCon>())
                     {
@@ -188,7 +195,7 @@ namespace LeagueFriend.Mvvm_ViewModel
                         wait = true;
                     }
                 }
-                StoredToken = null;
+                
             });
         }
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

@@ -22,6 +22,8 @@ namespace EFLibrary.DataAcces
         public DbSet<Champion> Champion { get; set; }
         public DbSet<Team> Team { get; set; }
         public DbSet<Participant> Participant {get;set;}
+        public DbSet<Stats> Stats { get; set; }
+        public DbSet<TimeLine> TimeLine { get; set; }
 
     }
 }

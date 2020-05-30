@@ -59,7 +59,7 @@ namespace LeagueFriend.Mvvm_ViewModel
         });
             var totalGames = WinCount + LossCount;
             PercentCount = ((double)WinCount / (double)totalGames) * (double)100;
-
+           PercentCount = Math.Round(PercentCount, 2);
         }
     }
 }

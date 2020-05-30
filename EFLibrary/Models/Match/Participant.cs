@@ -25,5 +25,9 @@ namespace EFLibrary.Models
 
         public Match Match { get; set; }
         public long MatchGameId { get; set; }
+        [ForeignKey("StatsId")]
+        public Stats Stats { get; set; }
+        [ForeignKey("TimeLineId")]
+        public TimeLine TimeLine { get; set; }
     }
 }

@@ -4,14 +4,16 @@ using EFLibrary.DataAcces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EFLibrary.Migrations
 {
     [DbContext(typeof(DbCon))]
-    partial class DbContextModelSnapshot : ModelSnapshot
+    [Migration("20200530204515_stats")]
+    partial class stats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,9 +43,6 @@ namespace EFLibrary.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("DeltaId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Period")
                         .HasColumnType("nvarchar(max)");
 
@@ -56,18 +55,21 @@ namespace EFLibrary.Migrations
                     b.Property<int?>("TimeLineId2")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TimeLineId3")
+                        .HasColumnType("int");
+
                     b.Property<double>("Value")
                         .HasColumnType("float");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DeltaId");
 
                     b.HasIndex("TimeLineId");
 
                     b.HasIndex("TimeLineId1");
 
                     b.HasIndex("TimeLineId2");
+
+                    b.HasIndex("TimeLineId3");
 
                     b.ToTable("Delta");
                 });
@@ -124,9 +126,6 @@ namespace EFLibrary.Migrations
                     b.Property<string>("PlayerId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int?>("StatsId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("TeamId")
                         .HasColumnType("int");
 
@@ -142,8 +141,6 @@ namespace EFLibrary.Migrations
                     b.HasIndex("ParticipantParticipantId");
 
                     b.HasIndex("PlayerId");
-
-                    b.HasIndex("StatsId");
 
                     b.HasIndex("TeamId");
 
@@ -243,6 +240,9 @@ namespace EFLibrary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ParticipantId")
+                        .IsUnique();
+
                     b.ToTable("Stats");
                 });
 
@@ -288,19 +288,19 @@ namespace EFLibrary.Migrations
                 {
                     b.HasOne("EFLibrary.Models.TimeLine", null)
                         .WithMany("CsDiffPerMin")
-                        .HasForeignKey("DeltaId");
-
-                    b.HasOne("EFLibrary.Models.TimeLine", null)
-                        .WithMany("CsPrMin")
                         .HasForeignKey("TimeLineId");
 
                     b.HasOne("EFLibrary.Models.TimeLine", null)
-                        .WithMany("XpDiffPerMin")
+                        .WithMany("CsPrMin")
                         .HasForeignKey("TimeLineId1");
 
                     b.HasOne("EFLibrary.Models.TimeLine", null)
-                        .WithMany("XpPrMin")
+                        .WithMany("XpDiffPerMin")
                         .HasForeignKey("TimeLineId2");
+
+                    b.HasOne("EFLibrary.Models.TimeLine", null)
+                        .WithMany("XpPrMin")
+                        .HasForeignKey("TimeLineId3");
                 });
 
             modelBuilder.Entity("EFLibrary.Models.Participant", b =>
@@ -325,10 +325,6 @@ namespace EFLibrary.Migrations
                         .WithMany()
                         .HasForeignKey("PlayerId");
 
-                    b.HasOne("EFLibrary.Models.Stats", "Stats")
-                        .WithMany()
-                        .HasForeignKey("StatsId");
-
                     b.HasOne("EFLibrary.Models.Team", "Team")
                         .WithMany()
                         .HasForeignKey("TeamId");
@@ -336,6 +332,15 @@ namespace EFLibrary.Migrations
                     b.HasOne("EFLibrary.Models.TimeLine", "TimeLine")
                         .WithMany()
                         .HasForeignKey("TimeLineId");
+                });
+
+            modelBuilder.Entity("EFLibrary.Models.Stats", b =>
+                {
+                    b.HasOne("EFLibrary.Models.Participant", null)
+                        .WithOne("Stats")
+                        .HasForeignKey("EFLibrary.Models.Stats", "ParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EFLibrary.Models.Team", b =>

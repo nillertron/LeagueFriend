@@ -116,6 +116,8 @@ namespace Api.Processor
                     request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
                     request.AddHeader("X-Riot-Token", Key);
                     var response = await client.ExecuteAsync(request);
+                    if (response.ResponseStatus == ResponseStatus.Error)
+                        throw new Exception("Bad request");
                     var Match = JsonConvert.DeserializeObject<Response>(response.Content);
                     var Teams = new List<Team>();
                     Match.Teams.ForEach(x => Teams.Add(new Team { TeamId = x.TeamId, Win = x.Win }));
@@ -134,7 +136,42 @@ namespace Api.Processor
                                 if (player != null)
                                 {
                                     var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
-                                    var pt = new Participant { PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), MatchGameId = game.GameId };
+
+                                    db.Add(participant.Stats);
+
+                                    var pt = new Participant { TimeLine = new TimeLine {Lane = participant.TimeLine.Lane }, Stats=participant.Stats,  PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), MatchGameId = game.GameId };
+
+                                    if (participant.TimeLine.CreepsPerMinDeltas != null)
+                                    {
+                                        foreach (var d in participant.TimeLine.CreepsPerMinDeltas)
+                                        {
+                                            pt.TimeLine.CsPrMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                        }
+                                    }
+                                    if (participant.TimeLine.CsDiffPerMinDeltas != null)
+                                    {
+                                        foreach (var d in participant.TimeLine.CsDiffPerMinDeltas)
+                                        {
+                                            pt.TimeLine.CsDiffPerMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                        }
+                                    }
+                                    if (participant.TimeLine.XpDiffPerMinDeltas != null)
+                                    {
+                                        foreach (var d in participant.TimeLine.XpPerMinDeltas)
+                                        {
+                                            pt.TimeLine.XpPrMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                        }
+                                    }
+                                    if (participant.TimeLine.XpDiffPerMinDeltas != null)
+                                    {
+                                        foreach (var d in participant.TimeLine.XpDiffPerMinDeltas)
+                                        {
+                                            pt.TimeLine.XpDiffPerMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                        }
+                                    }
+
+
+
                                     participantList.Add(pt);
                                 }
                             }
@@ -160,10 +197,14 @@ namespace Api.Processor
             {
                 game = storedGame;
                 game.Participants = db.Participant.Where(x => x.MatchGameId == game.GameId).ToList();
+               
                 game.Teams = db.Team.Where(o => o.Game == game).ToList();
                 foreach(var x in game.Participants)
                 {
                     x.Team = game.Teams.Where(o => o == x.Team).FirstOrDefault();
+                    x.TimeLine = db.TimeLine.Where(o => x.TimeLine == o).FirstOrDefault();
+                    x.Stats = db.Stats.Where(o => x.Stats == o).FirstOrDefault();
+
 
                 }
             }

@@ -4,14 +4,16 @@ using EFLibrary.DataAcces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EFLibrary.Migrations
 {
     [DbContext(typeof(DbCon))]
-    partial class DbContextModelSnapshot : ModelSnapshot
+    [Migration("20200530211249_stats1")]
+    partial class stats1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
