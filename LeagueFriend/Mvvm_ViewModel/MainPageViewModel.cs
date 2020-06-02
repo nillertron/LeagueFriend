@@ -23,7 +23,7 @@ namespace LeagueFriend.Mvvm_ViewModel
 
         public ICommand PlayerPageCommand { get { return _ClickCommand = new CommandHandler(() => PlayerPage(), () => true); } }
         public ICommand ChampionPageCommand { get { return _ClickCommand = new CommandHandler(() => ChampionPage(), () => true); } }
-
+        public ICommand LiveMatchPageCommand { get { return _ClickCommand = new CommandHandler(() => LiveMatchPage(), () => true); } }
         public MainPageViewModel()
         {
             Context = DependencyInjection.ContainerConfig.Configure();
@@ -68,6 +68,11 @@ namespace LeagueFriend.Mvvm_ViewModel
             }
 
 
+        }
+
+        private void LiveMatchPage()
+        {
+            CurrentPage = Context.Resolve<LiveMatchView>();
         }
         private void PlayerPage()
         {

@@ -74,41 +74,28 @@ namespace LeagueFriend.Mvvm_ViewModel
 
 
         }
+
+
         public async Task<List<Match>> GetMatchList(Player p)
         {
-            if(TokenList.Count>0)
+            //Tjek aktive tråde og cancel
+            if (TokenList.Count > 0)
             {
-                for(int i = 0; i<TokenList.Count; i++)
+                for (int i = 0; i < TokenList.Count; i++)
                 {
                     TokenList[i].Cancel();
                     TokenList.RemoveAt(i);
                 }
             }
+
             var proc = Context.Resolve<ILolProcessor>();
             var list = new List<Match>();
+
             if (p != null)
             {
                 await Task.Run(async () =>
                 {
-                    var db = (DbCon)Context.Resolve<IDbCon>();
-
-                    var matchList = await proc.GetMatchList(p);
-                    matchList.ForEach(o => list.Add(new Match { ChampionId = o.Champion, GameId = o.GameId, Lane = o.Lane, PlatformId = o.PlatformId, Queue = o.Queue, Role = o.Role, Season = o.Season, TimeStamp = o.TimeStamp }));
-                    var dbList = db.Match.Where(o=> o.Participants.Any(x=>x.PlayerId==p.Id)).Include(o=> o.Participants).Include("Participants.Stats").Include(x=>x.Teams).Include("Participants.TimeLine").ToList();
-                    foreach (var game in dbList)
-                    {
-
-                        var listPosition = list.Where(o => o.GameId == game.GameId).FirstOrDefault();
-                        if (listPosition != null)
-                        {
-                            listPosition.Participants = game.Participants;
-                            listPosition.Teams = game.Teams;
-                        }
-                        else
-                        {
-                            list.Add(game);
-                        }
-                    }
+                    await GetDbMatchesFromPlayer(p, list);
 
                     var count = 0;
                     for (int i = 0; i < 8; i++)
@@ -133,15 +120,46 @@ namespace LeagueFriend.Mvvm_ViewModel
                         }
 
                     }
-               });
+                });
             }
             else
                 throw new Exception("Player not found");
+
+
             var storedToken = new CancellationTokenSource();
             TokenList.Add(storedToken);
             FillRemainingMatchesFromAPI(list, storedToken.Token);
 
             return list;
+        }
+        private async Task GetDbMatchesFromPlayer(Player p, List<Match> list)
+        {
+            var proc = Context.Resolve<ILolProcessor>();
+
+            var db = (DbCon)Context.Resolve<IDbCon>();
+            
+            try
+            {
+                var matchList = await proc.GetMatchList(p);
+                matchList.ForEach(o => list.Add(new Match { ChampionId = o.Champion, GameId = o.GameId, Lane = o.Lane, PlatformId = o.PlatformId, Queue = o.Queue, Role = o.Role, Season = o.Season, TimeStamp = o.TimeStamp }));
+
+            }
+            catch (Exception ee) { }
+            var dbList = db.Match.Where(o => o.Participants.Any(x => x.PlayerId == p.Id)).Include(o => o.Participants).Include("Participants.Stats").Include(x => x.Teams).Include("Participants.TimeLine").ToList();
+            foreach (var game in dbList)
+            {
+
+                var listPosition = list.Where(o => o.GameId == game.GameId).FirstOrDefault();
+                if (listPosition != null)
+                {
+                    listPosition.Participants = game.Participants;
+                    listPosition.Teams = game.Teams;
+                }
+                else
+                {
+                    list.Add(game);
+                }
+            }
         }
         private async Task FillRemainingMatchesFromAPI(List<Match> list, CancellationToken cts)
         {
@@ -150,14 +168,14 @@ namespace LeagueFriend.Mvvm_ViewModel
 #pragma warning disable CS4014 
             Task.Run(async () =>
             {
-            //Vent 2 minutter for ikke at overflow api'en
+                //Vent 2 minutter for ikke at overflow api'en
 
-            Match dbMatch = null;
+                Match dbMatch = null;
                 for (int x = 0; x < list.Count; x++)
                 {
                     if (wait)
                     {
-                        for(int i = 0; i< 120; i++)
+                        for (int i = 0; i < 120; i++)
                         {
                             await Task.Delay(TimeSpan.FromSeconds(10));
                             if (cts.IsCancellationRequested)
@@ -178,7 +196,7 @@ namespace LeagueFriend.Mvvm_ViewModel
                         }
                         for (int i = 0; i < 10; i++)
                         {
-                            if(cts.IsCancellationRequested)
+                            if (cts.IsCancellationRequested)
                             {
                                 cts.ThrowIfCancellationRequested();
                             }
@@ -195,7 +213,7 @@ namespace LeagueFriend.Mvvm_ViewModel
                         wait = true;
                     }
                 }
-                
+
             });
         }
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

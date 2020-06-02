@@ -33,7 +33,7 @@
         <Border Background="AliceBlue" Grid.Row="1" Grid.Column="0" Grid.RowSpan="6" ></Border>
         <ContentControl Grid.Row="1" Grid.RowSpan="6" Grid.Column="1" Grid.ColumnSpan="4" Content="{Binding CurrentPage}"></ContentControl>
         <Button Content="Player" Command="{Binding PlayerPageCommand}" Grid.Row="1" Background="AliceBlue"></Button>
-        <Button Content="Champion" Command="{Binding ChampionPageCommand}" Grid.Row="2" Background="AliceBlue"></Button>
+        <Button Content="Live Match" Command="{Binding LiveMatchPageCommand}" Grid.Row="2" Background="AliceBlue"></Button>
 
 
     </Grid>

@@ -10,7 +10,9 @@ namespace Api.Processor
         Task<Match> FillMatchDetails(Match game);
         Task<Player> FindAccountDetails(string accName);
         Task<Player> FindAccountDetailsById(string AccountId);
+        Task FindChampionFromId(Participant p, int id);
         Task<List<ChampionResponse>> GetAllChampions();
+        Task GetLiveMatchDetails(string accId);
         Task<List<MatchResponse>> GetMatchList(Player p);
     }
 }

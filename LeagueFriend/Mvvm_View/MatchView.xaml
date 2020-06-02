@@ -14,6 +14,12 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
 
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -28,22 +34,105 @@
             <RowDefinition Height="*"/>
 
         </Grid.RowDefinitions>
-        <!--Stats-->
+        <!--Stats c0 & c1-->
         <TextBlock Text="Wins:"></TextBlock>
         <TextBlock Grid.Column="1" Text="{Binding WinCount}"></TextBlock>
         <TextBlock Grid.Row="1" Text="Loses:"></TextBlock>
         <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding LossCount}"></TextBlock>
         <TextBlock Grid.Row="2" Text="Win %:"></TextBlock>
         <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding PercentCount}"></TextBlock>
-        
+        <!--Stats c2 & c3-->
+        <TextBlock Grid.Column="2" Text="Avg KD:"/>
+        <TextBlock Grid.Column="3" Text="{Binding AvgKd}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="1" Text="Fav. Champ"/>
+        <TextBlock Grid.Column="3" Grid.Row="1" Text="{Binding FavChampion.Name}"/>
+
+        <TextBlock Grid.Column="2" Grid.Row="2" Text="Fav. Lane"/>
+        <TextBlock Grid.Column="3" Grid.Row="2" Text="{Binding FavoriteLane}"/>
+
         <!--Listview-->
-        <ListView ItemsSource="{Binding MatchList}" Grid.Row="3" Grid.RowSpan="4" Grid.ColumnSpan="6">
+        <ListView ItemsSource="{Binding MatchList}" Grid.Row="3" Grid.RowSpan="4" Grid.ColumnSpan="12">
+            <ListView.Resources>
+                <Style TargetType="{x:Type ListViewItem}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding WinString}" Value="Win">
+                            <Setter Property="Background" Value="#FF8DEE3D"></Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding WinString}" Value="Lose">
+                            <Setter Property="Background" Value="LightPink"></Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Resources>
             <ListView.View>
+                
                 <GridView>
-                    <GridViewColumn Header="Champion" DisplayMemberBinding="{Binding Champion.Name}"></GridViewColumn>
+                    
+                    <GridViewColumn Header="Champion" Width="100">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Image Grid.Column="0" Source="{Binding Champion.Image}"></Image>
+                                    <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding Champion.Name}"></TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Lane" DisplayMemberBinding="{Binding Lane}"></GridViewColumn>
                     <GridViewColumn Header="Win/Lose" DisplayMemberBinding="{Binding WinString}"></GridViewColumn>
+                    <GridViewColumn Header="K" DisplayMemberBinding="{Binding Kills}"></GridViewColumn>
+                    <GridViewColumn Header="D" DisplayMemberBinding="{Binding Deaths}"></GridViewColumn>
+                    <GridViewColumn Header="A" DisplayMemberBinding="{Binding Assist}"></GridViewColumn>
+                    <GridViewColumn Header="Items" Width="240">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <Image Grid.Column="0" Source="{Binding ItemImage0}"></Image>
+                                    <Image Grid.Column="1" Source="{Binding ItemImage1}"></Image>
+                                    <Image Grid.Column="2" Source="{Binding ItemImage2}"></Image>
+                                    <Image Grid.Column="3" Source="{Binding ItemImage3}"></Image>
+                                    <Image Grid.Column="4" Source="{Binding ItemImage4}"></Image>
+                                    <Image Grid.Column="5" Source="{Binding ItemImage5}"></Image>
+                                    <Image Grid.Column="6" Source="{Binding ItemImage6}"></Image>
+
+                                </Grid>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Gold Earned" DisplayMemberBinding="{Binding GoldEarned}" ></GridViewColumn>
+                    <GridViewColumn Header="CS" DisplayMemberBinding="{Binding TotalMinionsKilled}" ></GridViewColumn>
+
+
                 </GridView>
             </ListView.View>
+            
         </ListView>
+        <TextBlock Grid.Row="7" FontSize="30" Grid.Column="4" Text="&lt;" HorizontalAlignment="Center" VerticalAlignment="Center" >
+            <TextBlock.InputBindings>
+                <MouseBinding MouseAction="LeftClick" Command="{Binding PreviousPageCommand}"></MouseBinding>
+            </TextBlock.InputBindings>
+        </TextBlock>
+        <TextBlock Grid.Row="7" FontSize="30" Grid.Column="6" Text="&gt;" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock.InputBindings>
+                <MouseBinding MouseAction="LeftClick" Command="{Binding NextPageCommand}"></MouseBinding>
+            </TextBlock.InputBindings>
+        </TextBlock>
+        <TextBlock Grid.Row="7" FontSize="25" Grid.Column="5" Text="{Binding CurrentPage}" HorizontalAlignment="Center" VerticalAlignment="Center"></TextBlock>
+
+
     </Grid>
 </Window>

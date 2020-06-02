@@ -106,109 +106,99 @@ namespace Api.Processor
         {
             var db = (DbCon)Context.Resolve<IDbCon>();
 
-            var storedGame = db.Match.Where(x => x.GameId == game.GameId).FirstOrDefault();
-            if (storedGame == null)
+
+            try
             {
-                try
+                var client = new RestClient("https://euw1.api.riotgames.com/lol/match/v4/matches/" + game.GameId);
+                var request = new RestRequest(Method.GET);
+                request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
+                request.AddHeader("X-Riot-Token", Key);
+                var response = await client.ExecuteAsync(request);
+                if (response.ResponseStatus == ResponseStatus.Error)
+                    throw new Exception("Bad request");
+                var Match = JsonConvert.DeserializeObject<Response>(response.Content);
+                var Teams = new List<Team>();
+                Match.Teams.ForEach(x => Teams.Add(new Team { TeamId = x.TeamId, Win = x.Win }));
+                db.AddRange(Teams);
+                var participantList = new List<Participant>();
+                await Task.Run(async () =>
                 {
-                    var client = new RestClient("https://euw1.api.riotgames.com/lol/match/v4/matches/" + game.GameId);
-                    var request = new RestRequest(Method.GET);
-                    request.AddHeader("Accept-Charset", "application/x-www-form-urlencoded; charset=UTF-8");
-                    request.AddHeader("X-Riot-Token", Key);
-                    var response = await client.ExecuteAsync(request);
-                    if (response.ResponseStatus == ResponseStatus.Error)
-                        throw new Exception("Bad request");
-                    var Match = JsonConvert.DeserializeObject<Response>(response.Content);
-                    var Teams = new List<Team>();
-                    Match.Teams.ForEach(x => Teams.Add(new Team { TeamId = x.TeamId, Win = x.Win }));
-                    db.AddRange(Teams);
-                    var participantList = new List<Participant>();
-                    await Task.Run(async () =>
+                    foreach (var o in Match.participantIdentities)
                     {
-                        foreach(var o in Match.participantIdentities)
+                        if (o.player.AccountId != null)
                         {
-                            if (o.player.AccountId != null)
+                            await Task.Delay(50);
+                            Player player = null;
+
+                            player = await FindAccountDetailsById(o.player.AccountId);
+                            if (player != null)
                             {
-                                await Task.Delay(50);
-                                Player player = null;
+                                var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
 
-                                player = await FindAccountDetailsById(o.player.AccountId);
-                                if (player != null)
+                                db.Add(participant.Stats);
+
+                                var pt = new Participant { TimeLine = new TimeLine { Lane = participant.TimeLine.Lane }, Stats = participant.Stats, PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), MatchGameId = game.GameId };
+
+                                if (participant.TimeLine.CreepsPerMinDeltas != null)
                                 {
-                                    var participant = Match.Participants.Where(x => x.ParticipantId == o.ParticipantId).FirstOrDefault();
-
-                                    db.Add(participant.Stats);
-
-                                    var pt = new Participant { TimeLine = new TimeLine {Lane = participant.TimeLine.Lane }, Stats=participant.Stats,  PlayerId = player.Id, ChampionId = participant.ChampionId, Team = Teams.Where(x => x.TeamId == participant.TeamId).FirstOrDefault(), MatchGameId = game.GameId };
-
-                                    if (participant.TimeLine.CreepsPerMinDeltas != null)
+                                    foreach (var d in participant.TimeLine.CreepsPerMinDeltas)
                                     {
-                                        foreach (var d in participant.TimeLine.CreepsPerMinDeltas)
-                                        {
-                                            pt.TimeLine.CsPrMin.Add(new Delta { Period = d.Key, Value = d.Value });
-                                        }
+                                        pt.TimeLine.CsPrMin.Add(new Delta { Period = d.Key, Value = d.Value });
                                     }
-                                    if (participant.TimeLine.CsDiffPerMinDeltas != null)
-                                    {
-                                        foreach (var d in participant.TimeLine.CsDiffPerMinDeltas)
-                                        {
-                                            pt.TimeLine.CsDiffPerMin.Add(new Delta { Period = d.Key, Value = d.Value });
-                                        }
-                                    }
-                                    if (participant.TimeLine.XpDiffPerMinDeltas != null)
-                                    {
-                                        foreach (var d in participant.TimeLine.XpPerMinDeltas)
-                                        {
-                                            pt.TimeLine.XpPrMin.Add(new Delta { Period = d.Key, Value = d.Value });
-                                        }
-                                    }
-                                    if (participant.TimeLine.XpDiffPerMinDeltas != null)
-                                    {
-                                        foreach (var d in participant.TimeLine.XpDiffPerMinDeltas)
-                                        {
-                                            pt.TimeLine.XpDiffPerMin.Add(new Delta { Period = d.Key, Value = d.Value });
-                                        }
-                                    }
-
-
-
-                                    participantList.Add(pt);
                                 }
+                                if (participant.TimeLine.CsDiffPerMinDeltas != null)
+                                {
+                                    foreach (var d in participant.TimeLine.CsDiffPerMinDeltas)
+                                    {
+                                        pt.TimeLine.CsDiffPerMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                    }
+                                }
+                                if (participant.TimeLine.XpDiffPerMinDeltas != null)
+                                {
+                                    foreach (var d in participant.TimeLine.XpPerMinDeltas)
+                                    {
+                                        pt.TimeLine.XpPrMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                    }
+                                }
+                                if (participant.TimeLine.XpDiffPerMinDeltas != null)
+                                {
+                                    foreach (var d in participant.TimeLine.XpDiffPerMinDeltas)
+                                    {
+                                        pt.TimeLine.XpDiffPerMin.Add(new Delta { Period = d.Key, Value = d.Value });
+                                    }
+                                }
+
+
+
+                                participantList.Add(pt);
                             }
                         }
+                    }
 
 
-                    });
-                    Teams.ForEach(o => o.Game = game);
-                    //db.Participant.AddRange(participantList);
-                    //await db.SaveChangesAsync();
-                    game.Participants = participantList;
-                    db.Add(game);
-                    await db.SaveChangesAsync();
-                }
-                catch (Exception ee)
-                {
-                    var msg = ee;
-                }
-
-
+                });
+                Teams.ForEach(o => o.Game = game);
+                //db.Participant.AddRange(participantList);
+                //await db.SaveChangesAsync();
+                game.Participants = participantList;
+                db.Add(game);
+                await db.SaveChangesAsync();
             }
-            else
+            catch (Exception ee)
             {
-                game = storedGame;
-                game.Participants = db.Participant.Where(x => x.MatchGameId == game.GameId).ToList();
-               
-                game.Teams = db.Team.Where(o => o.Game == game).ToList();
-                foreach(var x in game.Participants)
-                {
-                    x.Team = game.Teams.Where(o => o == x.Team).FirstOrDefault();
-                    x.TimeLine = db.TimeLine.Where(o => x.TimeLine == o).FirstOrDefault();
-                    x.Stats = db.Stats.Where(o => x.Stats == o).FirstOrDefault();
-
-
-                }
+                var msg = ee;
             }
+
             return game;
+        }
+
+        public async Task GetLiveMatchDetails(string accId)
+        {
+            var client = new RestClient("https://euw1.api.riotgames.com/lol/spectator/v4/active-games/by-summoner/" + accId);
+            var request = new RestRequest(Method.GET);
+            request.AddHeader("Content-Type", "application/json;charset=utf-8");
+            request.AddHeader("X-Riot-Token", Key);
+            var response = await client.ExecuteAsync(request);
         }
     }
 }

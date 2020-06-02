@@ -1,4 +1,7 @@
-﻿delete from Participant
-delete from Team
-delete from Player
-delete from match
+﻿Delete from Delta
+Delete from stats
+Delete from TimeLine
+delete from team
+Delete from match
+delete from player
+delete from Participant

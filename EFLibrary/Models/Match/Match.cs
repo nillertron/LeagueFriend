@@ -31,7 +31,33 @@ namespace EFLibrary.Models
         public List<Team> Teams { get; set; } = new List<Team>();
         [ForeignKey("ParticipantParticipantId")]
         public List<Participant> Participants { get; set; } = new List<Participant>();
-        
+        [NotMapped]
+        public int Kills { get; set; } 
+        [NotMapped]
+        public int Deaths { get; set; } 
+        [NotMapped]
+        public int Assist { get; set; }
+        [NotMapped]
+        public string ItemImage1 { get; set; }
+        [NotMapped]
+        public string ItemImage2 { get; set; }
+        [NotMapped]
+        public string ItemImage3 { get; set; }
+        [NotMapped]
+        public string ItemImage4 { get; set; }
+        [NotMapped]
+        public string ItemImage5{ get; set; }
+        [NotMapped]
+        public string ItemImage6 { get; set; }
+        [NotMapped]
+        public string ItemImage0 { get; set; }
+        [NotMapped]
+        public int GoldEarned { get; set; }
+        [NotMapped]
+        public int TotalMinionsKilled { get; set; }
+
+
+
 
     }
 }
